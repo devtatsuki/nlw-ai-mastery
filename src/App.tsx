@@ -1,5 +1,7 @@
-import { FileVideo, Github, Upload, Wand2 } from "lucide-react";
+import { Copy, FileVideo, Github, Upload, Wand2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "./components/ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./components/ui/hover-card";
 import { Label } from "./components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
 import { Separator } from "./components/ui/separator";
@@ -7,13 +9,19 @@ import { Slider } from "./components/ui/slider";
 import { Textarea } from "./components/ui/textarea";
 
 export function App() {
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
   const clipboardCopy = async (value: string) => {
 
     try {
       await navigator.clipboard.writeText(value)
+      setIsCopied(true);
     } catch (err) {
       console.error('Failed to copy: ', err);
+    } finally {
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2 * 1000)
     }
   }
 
@@ -50,7 +58,21 @@ export function App() {
             />
           </div>
           <p className="text-sm text-muted-foreground">
-            Lembre-se: você pode utilizar a variável <code onClick={() => clipboardCopy('{transcription}')} className="text-blue-400 p-0.5 bg-blue-500/10 rounded-sm cursor-pointer">{'{transcription}'}</code> no seu prompt para adicionar o conteúdo da transcrição do vídeo selecionado.
+            Lembre-se: você pode utilizar a variável {' '}
+            <HoverCard>
+              <HoverCardTrigger
+                onClick={() => clipboardCopy('{transcription}')}
+                className="text-blue-400 px-1 py-1 bg-blue-500/10 rounded-sm cursor-pointer"
+                >
+                <code>{!isCopied ? '{transcription}' : 'copiado'}</code>
+              </HoverCardTrigger>
+              <HoverCardContent className="flex items-center justify-center gap-2">
+                <Copy className="w-4 h-4" />
+                Clique para copiar
+              </HoverCardContent>
+            </HoverCard>
+            {' '}
+            no seu prompt para adicionar o conteúdo da transcrição do vídeo selecionado.
           </p>
         </div>
         
@@ -123,6 +145,7 @@ export function App() {
                 min={0}
                 max={1}
                 step={0.1}
+                defaultValue={[0.5]}
               />
               <span className="block text-xs text-muted-foreground italic">
                 Valores mais altos tendem a deixar o resultado mais criativo e com possíveis erros.
