@@ -12,7 +12,6 @@ export function App() {
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
   const clipboardCopy = async (value: string) => {
-
     try {
       await navigator.clipboard.writeText(value)
       setIsCopied(true);
@@ -53,7 +52,7 @@ export function App() {
             />
             <Textarea
               className="resize-none p-4 leading-relaxed"
-              placeholder="Resultado gerado pea IA..."
+              placeholder="Resultado gerado pela IA..."
               readOnly
             />
           </div>
