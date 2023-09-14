@@ -1,5 +1,7 @@
+import { useCompletion } from "ai/react";
 import { Copy, Github, Wand2 } from "lucide-react";
 import { useState } from "react";
+import { PromptSelect } from "./components/prompt-select";
 import { Button } from "./components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./components/ui/hover-card";
 import { Label } from "./components/ui/label";
@@ -11,6 +13,8 @@ import { VideoInputForm } from "./components/video-input-form";
 
 export function App() {
   const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [videoId, setVideoId] = useState<string | null>(null)
+  const [temperature, setTemperature] = useState<number>(0.5);
 
   const clipboardCopy = async (value: string) => {
     try {
@@ -24,6 +28,24 @@ export function App() {
       }, 2 * 1000)
     }
   }
+
+  const {
+    input,
+    setInput,
+    handleInputChange,
+    handleSubmit,
+    completion,
+    isLoading,
+  } = useCompletion({
+    api: 'http://localhost:3333/ai/complete',
+    body: {
+      videoId,
+      temperature,
+    },
+    headers: {
+      'Content-type': 'application/json',
+    },
+  });
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -50,10 +72,13 @@ export function App() {
             <Textarea
               className="resize-none p-4 leading-relaxed"
               placeholder="Inclua o prompt para a IA..."
+              value={input}
+              onChange={handleInputChange}
             />
             <Textarea
               className="resize-none p-4 leading-relaxed"
               placeholder="Resultado gerado pela IA..."
+              value={completion}
               readOnly
             />
           </div>
@@ -77,22 +102,14 @@ export function App() {
         </div>
         
         <aside className="w-80 space-y-6">
-          <VideoInputForm />          
+          <VideoInputForm onVideoUploaded={setVideoId} />          
 
           <Separator />
-
-          <form className="space-y-6">
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label>Prompt</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um prompt" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="title">Título do YouTube</SelectItem>
-                  <SelectItem value="description">Descrição do YouTube</SelectItem>
-                </SelectContent>
-              </Select>
+              <PromptSelect onPromptSelected={setInput} />
             </div>
 
             <div className="space-y-2">
@@ -113,12 +130,16 @@ export function App() {
             <Separator />
 
             <div className="space-y-4">
-              <Label>Temperatura</Label>
+              <div className="flex justify-between">
+                <Label>Temperatura</Label>
+                <Label className="text-muted-foreground">{temperature}</Label>
+              </div>
               <Slider
                 min={0}
                 max={1}
                 step={0.1}
-                defaultValue={[0.5]}
+                value={[temperature]}
+                onValueChange={(value) => setTemperature(value[0])}
               />
               <span className="block text-xs text-muted-foreground italic">
                 Valores mais altos tendem a deixar o resultado mais criativo e com possíveis erros.
@@ -127,7 +148,7 @@ export function App() {
 
             <Separator />
 
-            <Button type="submit" className="w-full">
+            <Button disabled={isLoading} type="submit" className="w-full">
               Executar
               <Wand2 className="w-4 h-4 ml-2" />
             </Button>
